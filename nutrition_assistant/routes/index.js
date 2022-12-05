@@ -54,7 +54,7 @@ const computeDateRange = dates => {
   // Convert range of dates from local time to UTC.
 
   // offset between local time and UTC time
-  const hoursOffset = new Date().getTimezoneOffset() / 60;
+  //const hoursOffset = new Date().getTimezoneOffset() / 60;
 
   // convert selected local dates into Date objects
   var startDate = dates.startDate;
@@ -67,8 +67,8 @@ const computeDateRange = dates => {
   endDate.setDate(endDate.getDate() + 1);
 
   // convert local time to UTC time
-  startDate.setHours(startDate.getHours() + hoursOffset);
-  endDate.setHours(endDate.getHours() + hoursOffset);
+  // startDate.setHours(startDate.getHours() + hoursOffset);
+  // endDate.setHours(endDate.getHours() + hoursOffset);
 
   // return strings in ISO format
   startDate = startDate.toISOString();
@@ -117,13 +117,19 @@ router.post('/fetch-nutrition-data', async (req, res) => {
   // get nutrition data in specified date range from cosmos db
   // extract local dates from UI
   const dateRange = req.body.dates.split(" ");
-  const startDateLocal = new Date(dateRange[0]);
-  const endDateLocal = new Date(dateRange[2]);
-  const dates = {startDate: startDateLocal.toISOString(), 
-                 endDate: endDateLocal.toISOString()}
+  const startDateUTC = new Date(dateRange[0]);
+  const endDateUTC = new Date(dateRange[2]);
+  
+  endDateUTC.setDate(endDateUTC.getDate() + 1);
+  
+  const startDateTimeUTC = startDateUTC.toISOString();
+  const endDateTimeUTC = endDateUTC.toISOString();
+
+  console.log(startDateTimeUTC);
+  console.log(endDateTimeUTC);
 
   // convert local dates to UTC
-  const {startDateUTC, endDateUTC} = computeDateRange(dates)
+  //const {startDateUTC, endDateUTC} = computeDateRange(dates)
 
   // access nutrition data container
   const container = cosmosClient.database("nutrition_database").container("nutrition_data");
@@ -140,13 +146,14 @@ router.post('/fetch-nutrition-data', async (req, res) => {
             sum(d['Total Sugars']), 
             sum(d['Protein'])
             from nutrition_data d 
-            where d.timestamp >= '` + startDateUTC + "' and d.timestamp < '" + endDateUTC + "'",
+            where TimestampToDateTime(d['_ts']*1000) >= '` + startDateUTC + 
+            "' and TimestampToDateTime(d['_ts']*1000) < '" + endDateUTC + "'",
   };
 
   const { resources: macronutrients } = await container.items.query(macronutrientQuerySpec).fetchAll();
 
   // also compute daily averages over selected range
-  const numDays = Math.floor((endDateLocal.getTime() - startDateLocal.getTime()) / (1000 * 3600 * 24)) + 1;
+  const numDays = Math.floor((endDateUTC.getTime() - startDateUTC.getTime()) / (1000 * 3600 * 24));
   var macronutrientAverages = {};
   for(const [key, value] of Object.entries(macronutrients[0])){
     // round total values and average values to two decimal places
@@ -157,11 +164,12 @@ router.post('/fetch-nutrition-data', async (req, res) => {
   // database query gets food predictions and probabilities in chosen range
   const classifierQuerySpec = {
     query: `select
-            d['timestamp'],
+            d['_ts'],
             d['prediction'],
             d['probability']
             from nutrition_data d 
-            where d.timestamp >= '` + startDateUTC + "' and d.timestamp < '" + endDateUTC + "'",
+            where TimestampToDateTime(d['_ts']*1000) >= '` + startDateTimeUTC + 
+            "' and TimestampToDateTime(d['_ts']*1000) < '" + endDateTimeUTC + "'",
   };
 
   var { resources: predictions } = await container.items.query(classifierQuerySpec).fetchAll();
@@ -169,7 +177,7 @@ router.post('/fetch-nutrition-data', async (req, res) => {
   // only include non-empty predictions in table
   predictions = predictions.filter(element => {
     if (Object.keys(element).length > 1) {
-      element['timestamp'] = new Date(element['timestamp']).toLocaleDateString();
+      element['_ts'] = new Date(element['_ts'] * 1000).toLocaleString();
       return true;
     }
   
