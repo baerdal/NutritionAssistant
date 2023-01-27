@@ -1,5 +1,10 @@
 # Nutrition Assistant Project
 
+Final project for CS 5412, Cloud Computing, in Fall 2022. \
+By Berk Erdal and Morgan Cupp.
+
+Video Link: https://www.youtube.com/watch?v=lqRh6MhoyS4 
+
 ## Prerequisites
 Clone the repository to your machine:
 ```bash
