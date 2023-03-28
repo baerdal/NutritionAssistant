@@ -125,9 +125,6 @@ router.post('/fetch-nutrition-data', async (req, res) => {
   const startDateTimeUTC = startDateUTC.toISOString();
   const endDateTimeUTC = endDateUTC.toISOString();
 
-  console.log(startDateTimeUTC);
-  console.log(endDateTimeUTC);
-
   // convert local dates to UTC
   //const {startDateUTC, endDateUTC} = computeDateRange(dates)
 
@@ -146,8 +143,8 @@ router.post('/fetch-nutrition-data', async (req, res) => {
             sum(d['Total Sugars']), 
             sum(d['Protein'])
             from nutrition_data d 
-            where TimestampToDateTime(d['_ts']*1000) >= '` + startDateUTC + 
-            "' and TimestampToDateTime(d['_ts']*1000) < '" + endDateUTC + "'",
+            where TimestampToDateTime(d['_ts']*1000) >= '` + startDateTimeUTC + 
+            "' and TimestampToDateTime(d['_ts']*1000) < '" + endDateTimeUTC + "'",
   };
 
   const { resources: macronutrients } = await container.items.query(macronutrientQuerySpec).fetchAll();

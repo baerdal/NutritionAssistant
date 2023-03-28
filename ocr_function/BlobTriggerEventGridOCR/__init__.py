@@ -106,7 +106,6 @@ def main(myblob: func.InputStream):
         
         # Only write to DB if any macronutrient data is extracted (picture is actually of nutrition label)
         if len(nutrition_data) > 1:
-            nutrition_data['timestamp'] = read_result.created_date_time
             db_write(nutrition_data)
             logging.info(f"OCR function finished processing blob {myblob.name}!\n")
     else:

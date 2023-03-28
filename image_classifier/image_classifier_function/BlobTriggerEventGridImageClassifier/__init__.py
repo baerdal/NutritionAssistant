@@ -91,7 +91,6 @@ def main(myblob: func.InputStream):
     if len(nutrition_data) > 1:
         nutrition_data['prediction'] = prediction.tag_name
         nutrition_data['probability'] = round(prediction.probability * 100, 2)
-        nutrition_data['timestamp'] = datetime.datetime.utcnow().isoformat()
         db_write(nutrition_data)
         logging.info(f"Food classification function finished processing blob {myblob.name} \
                      with prediction {prediction.tag_name}!\n")

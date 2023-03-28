@@ -7,7 +7,7 @@
       "direction": "in",
       "path": "label-images/{name}",
       "source": "EventGrid",
-      "connection": "5412imagestorage_STORAGE"
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }
